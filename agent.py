@@ -9,8 +9,8 @@ from twilio.rest import Client
 # Initialize services
 load_dotenv()
 
-vocode_client = Vocode(api_key=os.getenv('VOCODE_API_KEY'))
-elevenlabs_client = ElevenLabs(os.getenv('ELEVENLABS_API_KEY'))
+vocode_client = Vocode(token=os.getenv('VOCODE_API_KEY'))
+elevenlabs_client = ElevenLabs(api_key=os.getenv('ELEVENLABS_API_KEY'))
 twilio_client = Client(os.getenv('TWILIO_ACCOUNT'), os.getenv('TWILIO_AUTH'))
 
 # Placeholder for storing collected information
