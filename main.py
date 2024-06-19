@@ -10,7 +10,7 @@ from loguru import logger
 from pyngrok import ngrok
 
 # Local application/library specific imports
-from healthcare_agent import SpellerAgentFactory, SpellerAgentConfig
+from speller_agent import SpellerAgentFactory
 
 from vocode.logging import configure_pretty_logging
 from vocode.streaming.models.agent import ChatGPTAgentConfig
@@ -49,19 +49,19 @@ telephony_server = TelephonyServer(
     config_manager=config_manager,
     inbound_call_configs=[
         TwilioInboundCallConfig(
-            # url="/inbound_call",
-            # agent_config=ChatGPTAgentConfig(
-            #     initial_message=BaseMessage(text="What up"),
-            #     prompt_preamble="Have a pleasant conversation about life",
-            #     generate_responses=True,
-            # ),
-            # uncomment this to use the speller agent instead
-            agent_config=SpellerAgentConfig(
-                initial_message=BaseMessage(
-                    text="im a speller agent, say something to me and ill spell it out for you"
-                ),
-                generate_responses=False,
+            url="/inbound_call",
+            agent_config=ChatGPTAgentConfig(
+                initial_message=BaseMessage(text="What up"),
+                prompt_preamble="Have a pleasant conversation about life",
+                generate_responses=True,
             ),
+            # uncomment this to use the speller agent instead
+            # agent_config=SpellerAgentConfig(
+            #     initial_message=BaseMessage(
+            #         text="im a speller agent, say something to me and ill spell it out for you"
+            #     ),
+            #     generate_responses=False,
+            # ),
             twilio_config=TwilioConfig(
                 account_sid=os.environ["TWILIO_ACCOUNT_SID"],
                 auth_token=os.environ["TWILIO_AUTH_TOKEN"],
