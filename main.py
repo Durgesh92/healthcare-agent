@@ -10,7 +10,8 @@ from loguru import logger
 from pyngrok import ngrok
 
 # Local application/library specific imports
-from speller_agent import SpellerAgentFactory
+from collect_data import CollectDataActionConfig
+from healthcare_agent import HealthAgentFactory
 
 from vocode.logging import configure_pretty_logging
 from vocode.streaming.models.agent import ChatGPTAgentConfig
@@ -18,6 +19,9 @@ from vocode.streaming.models.message import BaseMessage
 from vocode.streaming.models.telephony import TwilioConfig
 from vocode.streaming.telephony.config_manager.redis_config_manager import RedisConfigManager
 from vocode.streaming.telephony.server.base import TelephonyServer, TwilioInboundCallConfig
+
+from llama_index.core import SimpleDirectoryReader, VectorStoreIndex
+
 
 # if running from python, this will load the local .env
 # docker-compose will load the .env file by itself
@@ -44,6 +48,37 @@ if not BASE_URL:
 if not BASE_URL:
     raise ValueError("BASE_URL must be set in environment if not using pyngrok")
 
+# Get VectorDB for appointment times retrieval
+documents = SimpleDirectoryReader(
+    "rolovic_clinic_hours.txt"
+).load_data()
+index = VectorStoreIndex.from_documents(documents)
+
+init_msg = "Welcome to the Rolovic Health Clinic. Could you please provide your name and date of birth?"
+
+PROMPT_PREAMBLE = """
+I want you to act as call center agent for a health clinic being contacted by a prospective patient. 
+After greeting the patient, begin to ask questions to collect the information listed below.
+
+You must collect the following information from the patient: 
+- Collect patient's name and date of birth
+- Collect insurance information
+    - Payer name and ID
+- Ask if they have a referral, and to which physician
+- Collect chief medical complaint/reason they are coming in
+- Collect other demographics like address
+- Collect contact information
+- Offer up best available providers and times from the data in the nested list below
+    - Dr. Strangelove on July 2nd at 1:00 p.m.
+    - Dr. Strangelove on July 2nd at 4:00 p.m.
+    - Dr. Pickle on July 3rd at 11:00 a.m.
+    - Dr. Shemp on July 5th at 9:00 a.m.
+
+
+Once you've collected all of the listed information, you will say 'Thank you for your time,
+we will get back to you shortly regarding your appointment.'
+"""
+
 telephony_server = TelephonyServer(
     base_url=BASE_URL,
     config_manager=config_manager,
@@ -51,24 +86,22 @@ telephony_server = TelephonyServer(
         TwilioInboundCallConfig(
             url="/inbound_call",
             agent_config=ChatGPTAgentConfig(
-                initial_message=BaseMessage(text="What up"),
-                prompt_preamble="Have a pleasant conversation about life",
+                initial_message=BaseMessage(text=init_msg),
+                prompt_preamble=PROMPT_PREAMBLE,
                 generate_responses=True,
+                actions=[
+                    CollectDataActionConfig(
+                        type = 'action_collect-data'
+                    )
+                ]
             ),
-            # uncomment this to use the speller agent instead
-            # agent_config=SpellerAgentConfig(
-            #     initial_message=BaseMessage(
-            #         text="im a speller agent, say something to me and ill spell it out for you"
-            #     ),
-            #     generate_responses=False,
-            # ),
             twilio_config=TwilioConfig(
                 account_sid=os.environ["TWILIO_ACCOUNT_SID"],
                 auth_token=os.environ["TWILIO_AUTH_TOKEN"],
             ),
         )
     ],
-    agent_factory=SpellerAgentFactory(),
+    agent_factory=HealthAgentFactory(),
 )
 
 app.include_router(telephony_server.get_router())
