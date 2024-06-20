@@ -5,9 +5,10 @@ from typing import Optional, Type
 from pydantic import Field
 from pydantic.v1 import BaseModel
 
+from vocode.streaming.action.abstract_factory import AbstractActionFactory
 from vocode.streaming.action.base_action import BaseAction
 from vocode.streaming.models.actions import ActionConfig as VocodeActionConfig
-from vocode.streaming.models.actions import ActionInput, ActionOutput
+from vocode.streaming.models.actions import ActionInput, ActionOutput, ActionConfig
 
     
 _DATA_ACTION_DESCRIPTION = """
@@ -96,3 +97,10 @@ class CollectData(
             action_type=action_input.action_config.type,
             response=CollectDataResponse(call_data==call_data),
         )
+    
+class MyCustomActionFactory(AbstractActionFactory):
+    def create_action(self, action_config: ActionConfig):
+        if action_config.type == "action_collect_data":
+            return CollectData(action_config)
+        else:
+            raise Exception("Action type not supported by Agent config.")
