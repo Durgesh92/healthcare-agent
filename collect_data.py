@@ -8,7 +8,7 @@ from pydantic.v1 import BaseModel
 from vocode.streaming.action.abstract_factory import AbstractActionFactory
 from vocode.streaming.action.base_action import BaseAction
 from vocode.streaming.models.actions import ActionConfig as VocodeActionConfig
-from vocode.streaming.models.actions import ActionInput, ActionOutput, ActionConfig
+from vocode.streaming.models.actions import ActionInput, ActionOutput, PhraseBasedActionTrigger, PhraseBasedActionTriggerConfig, PhraseTrigger
 
     
 _DATA_ACTION_DESCRIPTION = """
@@ -39,7 +39,19 @@ class CollectDataResponse(BaseModel):
 
 
 class CollectDataActionConfig(
-    VocodeActionConfig, type="action_collect_data"  # type: ignore
+    VocodeActionConfig, 
+    type="action_collect_data",
+    action_trigger=PhraseBasedActionTrigger(
+        type = "action_trigger_phrase_based",
+        config = PhraseBasedActionTriggerConfig(
+            phrase_triggers = [
+                PhraseTrigger(
+                    phrase="Thank you for your time, we will get back to you shortly regarding your appointment",
+                    condition="phrase_condition_type_contains"
+                )
+              ]
+          )
+      )  # type: ignore
 ):
     pass
 
@@ -99,7 +111,7 @@ class CollectData(
         )
     
 class MyCustomActionFactory(AbstractActionFactory):
-    def create_action(self, action_config: ActionConfig):
+    def create_action(self, action_config: VocodeActionConfig):
         if action_config.type == "action_collect_data":
             return CollectData(action_config)
         else:
