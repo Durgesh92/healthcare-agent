@@ -11,7 +11,7 @@ from pyngrok import ngrok
 
 # Local application/library specific imports
 from collect_data import CollectDataActionConfig
-from healthcare_agent import HealthAgentFactory
+from agent_factory import HealthAgentFactory
 
 from vocode.logging import configure_pretty_logging
 from vocode.streaming.models.agent import ChatGPTAgentConfig
@@ -19,9 +19,6 @@ from vocode.streaming.models.message import BaseMessage
 from vocode.streaming.models.telephony import TwilioConfig
 from vocode.streaming.telephony.config_manager.redis_config_manager import RedisConfigManager
 from vocode.streaming.telephony.server.base import TelephonyServer, TwilioInboundCallConfig
-
-from llama_index.core import SimpleDirectoryReader, VectorStoreIndex
-
 
 # if running from python, this will load the local .env
 # docker-compose will load the .env file by itself
@@ -48,12 +45,6 @@ if not BASE_URL:
 if not BASE_URL:
     raise ValueError("BASE_URL must be set in environment if not using pyngrok")
 
-# Get VectorDB for appointment times retrieval
-documents = SimpleDirectoryReader(
-    "rolovic_clinic_hours.txt"
-).load_data()
-index = VectorStoreIndex.from_documents(documents)
-
 init_msg = "Welcome to the Rolovic Health Clinic. Could you please provide your name and date of birth?"
 
 PROMPT_PREAMBLE = """
@@ -75,8 +66,7 @@ You must collect the following information from the patient:
     - Dr. Shemp on July 5th at 9:00 a.m.
 
 
-Once you've collected all of the listed information, you will say 'Thank you for your time,
-we will get back to you shortly regarding your appointment.'
+Once the patient chooses which appointment they want to book, you will run the collect_data_action and say Goodbye.
 """
 
 telephony_server = TelephonyServer(
@@ -91,7 +81,7 @@ telephony_server = TelephonyServer(
                 generate_responses=True,
                 actions=[
                     CollectDataActionConfig(
-                        type = 'action_collect-data'
+                        type = 'action_collect_data'
                     )
                 ]
             ),

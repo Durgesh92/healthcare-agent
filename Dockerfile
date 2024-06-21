@@ -14,6 +14,7 @@ RUN pip install --no-cache-dir --upgrade poetry
 RUN poetry config virtualenvs.create false
 RUN poetry install --no-dev --no-interaction --no-ansi
 COPY main.py /code/main.py
-COPY speller_agent.py /code/speller_agent.py
+COPY agent_factory.py /code/agent_factory.py
+COPY collect_data.py /code/collect_data.py
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3000"]

@@ -2,8 +2,7 @@ import json
 import os
 from typing import Optional, Type
 
-from pydantic import Field
-from pydantic.v1 import BaseModel
+from pydantic.v1 import BaseModel, Field
 
 from vocode.streaming.action.abstract_factory import AbstractActionFactory
 from vocode.streaming.action.base_action import BaseAction
@@ -38,21 +37,18 @@ class CollectDataResponse(BaseModel):
     call_data: dict
 
 
-class CollectDataActionConfig(
-    VocodeActionConfig, 
-    type="action_collect_data",
-    action_trigger=PhraseBasedActionTrigger(
-        type = "action_trigger_phrase_based",
-        config = PhraseBasedActionTriggerConfig(
-            phrase_triggers = [
-                PhraseTrigger(
-                    phrase="Thank you for your time, we will get back to you shortly regarding your appointment",
-                    condition="phrase_condition_type_contains"
-                )
-              ]
-          )
-      )  # type: ignore
-):
+class CollectDataActionConfig(VocodeActionConfig, type="action_collect_data"):
+    # action_trigger = PhraseBasedActionTrigger(
+    #     type = "action_trigger_phrase_based",
+    #     config = PhraseBasedActionTriggerConfig(
+    #         phrase_triggers = [
+    #             PhraseTrigger(
+    #                 phrase="Thank you for your time we will get back to you shortly regarding your appointment",
+    #                 conditions=["phrase_condition_type_contains"]
+    #             ),
+    #         ]
+    #     )
+    # )  # type: ignore
     pass
 
 class CollectData(
@@ -83,13 +79,14 @@ class CollectData(
         self, action_input: ActionInput[CollectDataParameters]
     ) -> ActionOutput[CollectDataResponse]:
         
+        call_data = {}
         # Create dict
         call_data = {
             "patient_name": action_input.params.patient_name.strip(),
             "dob": action_input.params.dob.strip(),
             "insurance_name": action_input.params.insurance_name.strip(),
             "insurance_id": action_input.params.insurance_id.strip(),
-            "referral": action_input.params.referral.strip(),
+            "referral": action_input.params.referral,
             "refferal_physician": action_input.params.refferal_physician.strip(),
             "reason": action_input.params.reason.strip(),
             "address": action_input.params.address.strip(),
@@ -99,18 +96,22 @@ class CollectData(
             "booked_date": action_input.params.booked_date.strip()
         }
 
-        json_file = f"{call_data['patient_name']}{call_data['dob']}.json"
-        with open(json_file, "w") as outfile: 
-            json.dump(call_data, outfile)
+        print(call_data)
+
+        # data_path = "/mnt/c/Users/serdj/healthcare-agent/data/"
+        # identifier = f"{call_data['patient_name']}{call_data['dob']}".replace(" ", "_")
+        # json_file = f"{data_path}{identifier}.json"
+        # with open(json_file, "w") as outfile: 
+        #     json.dump(call_data, outfile)
 
 
         await self._end_of_run_hook()
         return ActionOutput(
             action_type=action_input.action_config.type,
-            response=CollectDataResponse(call_data==call_data),
+            response=CollectDataResponse(call_data=call_data),
         )
     
-class MyCustomActionFactory(AbstractActionFactory):
+class DataCollectActionFactory(AbstractActionFactory):
     def create_action(self, action_config: VocodeActionConfig):
         if action_config.type == "action_collect_data":
             return CollectData(action_config)
