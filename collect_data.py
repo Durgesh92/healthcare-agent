@@ -1,6 +1,4 @@
-import json
-import os
-from typing import Optional, Type
+from typing import Type
 
 from pydantic.v1 import BaseModel, Field
 
@@ -38,17 +36,6 @@ class CollectDataResponse(BaseModel):
 
 
 class CollectDataActionConfig(VocodeActionConfig, type="action_collect_data"):
-    # action_trigger = PhraseBasedActionTrigger(
-    #     type = "action_trigger_phrase_based",
-    #     config = PhraseBasedActionTriggerConfig(
-    #         phrase_triggers = [
-    #             PhraseTrigger(
-    #                 phrase="Thank you for your time we will get back to you shortly regarding your appointment",
-    #                 conditions=["phrase_condition_type_contains"]
-    #             ),
-    #         ]
-    #     )
-    # )  # type: ignore
     pass
 
 class CollectData(
@@ -97,13 +84,6 @@ class CollectData(
         }
 
         print(call_data)
-
-        # data_path = "/mnt/c/Users/serdj/healthcare-agent/data/"
-        # identifier = f"{call_data['patient_name']}{call_data['dob']}".replace(" ", "_")
-        # json_file = f"{data_path}{identifier}.json"
-        # with open(json_file, "w") as outfile: 
-        #     json.dump(call_data, outfile)
-
 
         await self._end_of_run_hook()
         return ActionOutput(

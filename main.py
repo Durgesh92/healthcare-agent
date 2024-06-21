@@ -10,8 +10,8 @@ from loguru import logger
 from pyngrok import ngrok
 
 # Local application/library specific imports
-from collect_data import CollectDataActionConfig
 from agent_factory import HealthAgentFactory
+from collect_data import CollectDataActionConfig
 
 from vocode.logging import configure_pretty_logging
 from vocode.streaming.models.agent import ChatGPTAgentConfig
