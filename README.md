@@ -14,4 +14,4 @@ With Docker installed, launch the agent with Docker build and compose.
 
 `docker-compose up`
 
-Finally, make sure your Twilio phone number is connected by webhook to your Ngrok url.  Then call your number and you'll have an AI agent available to take your intake information!
+Finally, make sure your Twilio phone number is connected by webhook to your Ngrok url.  Then call your number and you'll have an AI agent available to collect your intake information!
